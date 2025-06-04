@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>¿Quieres ser mi novia?</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* === FONDO ANIMADO DE GRADIENTE === */
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(45deg, #ff9a9e, #fad0c4, #fad0c4, #ff9a9e);
+      background-size: 600% 600%;
+      animation: gradientBG 15s ease infinite;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* === ESTRUCTURA PRINCIPAL CENTRADA === */
+    .container {
+      width: 100%;
+      max-width: 480px;
+      margin: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    /* === SOBRE === */
+    .envelope {
+      width: 360px;
+      height: 240px;
+      position: relative;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+    .envelope-body {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      border: 3px solid #e78fa7;
+      border-radius: 8px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+      overflow: hidden;
+      z-index: 1;
+    }
+    .envelope-top {
+      position: absolute;
+      width: 100%;
+      height: 50%;
+      background: #e78fa7;
+      top: 0;
+      left: 0;
+      transform-origin: bottom;
+      clip-path: polygon(0 0, 50% 100%, 100% 0);
+      transition: transform 1s ease-in-out;
+      z-index: 2;
+    }
+
+    /* === CARTA === */
+    .letter {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      width: 330px;
+      height: 200px;
+      background: #fffefc;
+      border: 2px dashed #f8b2bc;
+      border-radius: 6px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      padding: 1rem 1.25rem;
+      transform: translate(-50%, 0) scale(0.5);
+      opacity: 0;
+      transition:
+        transform 1s ease-in-out 1s,
+        opacity 1s ease-in-out 1s;
+      z-index: 3;
+    }
+
+    .poem-content {
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: #3a3a3a;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      height: 100%;
+    }
+
+    /* Al hacer clic, “abrimos” el sobre y la carta emerge */
+    .opened .envelope-top {
+      transform: rotateX(-180deg);
+    }
+    .opened .letter {
+      transform: translate(-50%, -240px) scale(1);
+      opacity: 1;
+    }
+
+    /* === BOTONES (ocultos hasta que la carta termine de emerger) === */
+    #buttonsContainer {
+      margin-top: 1.5rem;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    #buttonsContainer.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* === MENSAJES EMOTIVOS (ocultos inicialmente) === */
+    #noMessage, #yesMessage {
+      display: none;
+      margin-top: 1.5rem;
+      max-width: 360px;
+      font-size: 1rem;
+      color: #4a4a4a;
+    }
+    #noMessage h2, #yesMessage h2 {
+      font-size: 1.75rem;
+      font-weight: bold;
+      margin-bottom: 0.75rem;
+    }
+    #noMessage h2 {
+      color: #d14343;
+    }
+    #yesMessage h2 {
+      color: #2a8f2a;
+    }
+
+    /* === MODAL PERSONALIZADO (oculto inicialmente) === */
+    #responseModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    #responseModal.active {
+      display: flex;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      max-width: 320px;
+      width: 90%;
+      padding: 1.5rem;
+      text-align: center;
+      position: relative;
+      animation: appearModal 0.4s ease-out;
+    }
+    @keyframes appearModal {
+      from {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    .modal-content h2 {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 0.75rem;
+    }
+    .modal-content p {
+      font-size: 1rem;
+      color: #555;
+      margin-bottom: 1rem;
+      line-height: 1.4;
+    }
+    .modal-close {
+      background: #e75e7d;
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+    .modal-close:hover {
+      background: #d84c6a;
+      transform: scale(1.03);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- TITULO -->
+    <div class="mb-6">
+      <h1 class="text-5xl font-extrabold text-pink-700">💌 Tengo algo muy especial para ti…</h1>
+      <p class="text-gray-700 mt-2">Haz clic en la carta mágica.</p>
+    </div>
+
+    <!-- SOBRE + CARTA -->
+    <div id="envelopeContainer" class="envelope" onclick="openEnvelope()">
+      <div class="envelope-body"></div>
+      <div class="envelope-top"></div>
+      <div id="letter" class="letter">
+        <div class="poem-content">
+🌸 Un poema solo para ti 🌸
+
+Entre mil estrellas te encontré,  
+No fue casualidad, lo presentí.  
+Tus ojos me hablan sin decir,  
+Y en tu sonrisa aprendí a vivir.  
+
+No es un "te quiero" de palabras vacías,  
+es un querer que en mi alma brilla.  
+Hoy mi corazón, sin temor, te escribe:  
+¿Quieres ser mi novia, la razón por la que todo vibre?  
+
+❤️ Con todo mi cariño ❤️
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTONES -->
+    <div id="buttonsContainer" class="flex gap-6">
+      <button onclick="sendResponse('Sí')" 
+              class="bg-green-500 text-white px-8 py-3 rounded-lg text-xl font-bold shadow-lg transform hover:scale-105 transition">
+        💖 Sí 💖
+      </button>
+      <button onclick="sendResponse('No')" 
+              class="bg-red-500 text-white px-8 py-3 rounded-lg text-xl font-bold shadow-lg transform hover:scale-105 transition">
+        💔 No 💔
+      </button>
+    </div>
+
+    <!-- MENSAJES EMOTIVOS (inicialmente ocultos) -->
+    <div id="yesMessage">
+      <h2>¡Mi corazón vibra de alegría! 💚</h2>
+      <p>
+        Gracias por darme tu “Sí”. Cada latido mío late por ti.<br/>
+        Hoy mi mundo se ilumina con tu sonrisa, y prometo hacerte sentir siempre especial.  
+      </p>
+    </div>
+
+    <div id="noMessage">
+      <h2>Está bien 💫</h2>
+      <p>
+        Aun si tu respuesta es no, gracias por dejarme sentir algo tan bonito.<br/>
+        Seguiré estando para ti, como siempre, sin esperar nada más que tu felicidad. 🌹
+      </p>
+    </div>
+
+    <!-- FORMULARIO OCULTO PARA FORMSPREE -->
+    <form id="hiddenForm" action="https://formspree.io/f/movjlrnk" method="POST" class="hidden">
+      <input type="hidden" name="respuesta" id="respuestaInput">
+    </form>
+  </div>
+
+  <!-- === MODAL PERSONALIZADO === -->
+  <div id="responseModal">
+    <div class="modal-content">
+      <h2 id="modalTitle">¡Gracias!</h2>
+      <p id="modalMessage">Tu respuesta ha sido registrada con éxito.</p>
+      <button class="modal-close" onclick="closeModal()">Cerrar</button>
+    </div>
+  </div>
+
+  <script>
+    let hasOpened = false;
+
+    function openEnvelope() {
+      if (hasOpened) return;
+      hasOpened = true;
+
+      document.getElementById('envelopeContainer').classList.add('opened');
+      // Mostrar botones justo después de que la carta termine de emerger
+      setTimeout(() => {
+        document.getElementById('buttonsContainer').classList.add('visible');
+      }, 1200);
+    }
+
+    async function sendResponse(respuesta) {
+      // 1) Ocultamos botones para evitar doble clic
+      document.getElementById('buttonsContainer').classList.remove('visible');
+      document.getElementById('buttonsContainer').style.pointerEvents = 'none';
+
+      // 2) Enviamos con fetch para no recargar ni redirigir
+      try {
+        const formData = new URLSearchParams();
+        formData.append('respuesta', respuesta);
+
+        const res = await fetch('https://formspree.io/f/movjlrnk', {
+          method: 'POST',
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: formData
+        });
+
+        if (!res.ok) throw new Error('Error al enviar la respuesta.');
+
+        // 3) Preparamos el modal para mostrar un mensaje personalizado
+        const título = document.getElementById('modalTitle');
+        const mensaje = document.getElementById('modalMessage');
+
+        if (respuesta === 'Sí') {
+          título.textContent = '¡Mil gracias! 💖';
+          mensaje.innerHTML = 'Ale... gracias por decir que sí.&nbsp;<br>Eres muy especial para mí,<br> no tienes idea de lo feliz que me haces en este momento. <br>Prometo cuidar tu corazón como el regalo más valioso que tengo. <br> Esto es solo el comienzo de algo hermoso. 💖';
+        } else {
+          título.textContent = 'No pasa nada 🤍';
+          mensaje.innerHTML = 'Entiendo y respeto tu decisión.&nbsp;<br>Siempre podrás contar conmigo. 🌹';
+        }
+
+        // 4) Mostramos el modal
+        document.getElementById('responseModal').classList.add('active');
+      } catch (error) {
+        // En caso de error en el envío, volvemos a mostrar botones para que intente de nuevo
+        document.getElementById('buttonsContainer').classList.add('visible');
+        document.getElementById('buttonsContainer').style.pointerEvents = 'auto';
+        alert('Ups… hubo un problema al enviar tu respuesta. Por favor, inténtalo de nuevo.');
+        console.error(error);
+      }
+    }
+
+    function closeModal() {
+      // Ocultamos el modal
+      document.getElementById('responseModal').classList.remove('active');
+
+      // Mostrar el mensaje emotivo correspondiente a la respuesta
+      const títuloModal = document.getElementById('modalTitle').textContent;
+      if (títuloModal.includes('Mil gracias')) {
+        document.getElementById('yesMessage').style.display = 'block';
+      } else {
+        document.getElementById('noMessage').style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
